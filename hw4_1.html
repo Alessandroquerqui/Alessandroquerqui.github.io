@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafico Opzioni</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #chart-container {
+            width: 80%;
+            max-width: 600px;
+            margin: auto;
+        }
+        canvas {
+            width: 100% !important;
+            height: 400px !important;
+        }
+    </style>
+</head>
+<body>
+    <h2>Calcolo Payoff Opzioni</h2>
+    <label>Strike Price: <input type="number" id="strike" value="100"></label><br>
+    <label>Premium: <input type="number" id="premium" value="10"></label><br>
+    <label>Current Price: <input type="number" id="price" value="100"></label><br>
+    <label>Quantity: <input type="number" id="quantity" value="1"></label><br>
+    <label>Tipo: 
+        <select id="tipo">
+            <option value="call">Call</option>
+            <option value="put">Put</option>
+        </select>
+    </label><br>
+    <label>Posizione: 
+        <select id="posizione">
+            <option value="long">Long</option>
+            <option value="short">Short</option>
+        </select>
+    </label><br>
+    <button onclick="generaGrafico()">Genera Grafico</button>
+    
+    <div id="chart-container">
+        <canvas id="payoffChart"></canvas>
+    </div>
+
+    <script>
+        let payoffChart = null;
+
+        function generaGrafico() {
+            const strike = parseFloat(document.getElementById('strike').value);
+            const premium = parseFloat(document.getElementById('premium').value);
+            const quantity = parseFloat(document.getElementById('quantity').value);
+            const tipo = document.getElementById('tipo').value;
+            const posizione = document.getElementById('posizione').value;
+            
+            let xValues = [];
+            let yValues = [];
+            
+            for (let s = strike - 50; s <= strike + 50; s += 5) {
+                let payoff = 0;
+                
+                if (tipo === 'call') {
+                    payoff = Math.max(s - strike, 0) - premium;
+                } else if (tipo === 'put') {
+                    payoff = Math.max(strike - s, 0) - premium;
+                }
+                
+                if (posizione === 'short') {
+                    payoff = -payoff;
+                }
+                
+                payoff *= quantity;
+                xValues.push(s);
+                yValues.push(payoff);
+            }
+            
+            const ctx = document.getElementById('payoffChart').getContext('2d');
+            if (payoffChart) {
+                payoffChart.destroy();
+            }
+            payoffChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        label: 'Payoff Opzione',
+                        data: yValues,
+                        borderColor: 'blue',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { title: { display: true, text: 'Prezzo del Sottostante' } },
+                        y: { title: { display: true, text: 'Profitto/Perdita' } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
